@@ -1,6 +1,5 @@
 ﻿using System.Reflection;
 using DbUp;
-using DbUp.Engine;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 
@@ -21,8 +20,11 @@ public class DatabaseInitializer
     public void RunMigrations()
     {
         _logger.LogInformation("Starting database migrations...");
+        _logger.LogInformation("Connection string found (first 20 chars): {ConnectionStart}",
+            _connectionString.Substring(0, Math.Min(20, _connectionString.Length)));
 
-        EnsureDatabaseExists();
+        // Para Render, pulamos EnsureDatabaseExists pois o banco já existe
+        // O DbUp criará as tabelas automaticamente
 
         var upgrader = DeployChanges.To
             .PostgresqlDatabase(_connectionString)
@@ -40,49 +42,5 @@ public class DatabaseInitializer
         }
 
         _logger.LogInformation("Database migrations completed successfully!");
-    }
-
-    private void EnsureDatabaseExists()
-    {
-        // Extrai as partes da connection string
-        var builder = new Npgsql.NpgsqlConnectionStringBuilder(_connectionString);
-        var databaseName = builder.Database;
-
-        // Cria connection string para o banco 'postgres' (banco padrão)
-        builder.Database = "postgres";
-        var masterConnectionString = builder.ConnectionString;
-
-        // Cria o banco manualmente se não existir (evita dependência de EnsureDatabase extension)
-        using (var connection = new Npgsql.NpgsqlConnection(masterConnectionString))
-        {
-            connection.Open();
-
-            using (var checkCmd = connection.CreateCommand())
-            {
-                checkCmd.CommandText = "SELECT 1 FROM pg_database WHERE datname = @name";
-                var param = checkCmd.CreateParameter();
-                param.ParameterName = "name";
-                param.Value = databaseName;
-                checkCmd.Parameters.Add(param);
-
-                var exists = checkCmd.ExecuteScalar() != null;
-
-                if (!exists)
-                {
-                    using (var createCmd = connection.CreateCommand())
-                    {
-                        // Nome do banco pode precisar ser escapado; aqui usamos identificador entre aspas
-                        createCmd.CommandText = $"CREATE DATABASE \"{databaseName}\"";
-                        createCmd.ExecuteNonQuery();
-                    }
-
-                    _logger.LogInformation("Database '{DatabaseName}' created.", databaseName);
-                }
-                else
-                {
-                    _logger.LogInformation("Database '{DatabaseName}' already exists.", databaseName);
-                }
-            }
-        }
     }
 }
