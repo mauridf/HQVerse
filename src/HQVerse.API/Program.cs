@@ -1,10 +1,12 @@
 using System.Reflection;
 using System.Text;
+using System.Threading.RateLimiting;
 using HQVerse.Application.DependencyInjection;
 using HQVerse.CrossCutting.Extensions;
 using HQVerse.Infrastructure.Data.Migrations;
 using HQVerse.Infrastructure.DependencyInjection;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.IdentityModel.Tokens;
 using Scalar.AspNetCore;
 using Serilog;
@@ -28,7 +30,7 @@ try
     builder.Services.AddControllers();
     builder.Services.AddEndpointsApiExplorer();
 
-    // OpenAPI para .NET 10 (nativo, sem Swashbuckle)
+    // OpenAPI para .NET 10
     builder.Services.AddOpenApi(options =>
     {
         options.AddDocumentTransformer((document, context, cancellationToken) =>
@@ -55,6 +57,73 @@ try
 
             return Task.CompletedTask;
         });
+    });
+
+    // Rate Limiting
+    builder.Services.AddRateLimiter(options =>
+    {
+        options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+
+        // Política global: 100 requisições por minuto por IP
+        options.GlobalLimiter = PartitionedRateLimiter.Create<HttpContext, string>(context =>
+        {
+            var clientIp = context.Connection.RemoteIpAddress?.ToString()
+                ?? "unknown";
+
+            return RateLimitPartition.GetFixedWindowLimiter(
+                partitionKey: clientIp,
+                factory: _ => new FixedWindowRateLimiterOptions
+                {
+                    AutoReplenishment = true,
+                    PermitLimit = 100,
+                    Window = TimeSpan.FromMinutes(1)
+                });
+        });
+
+        // Política específica para autenticação: 5 tentativas por minuto
+        options.AddFixedWindowLimiter("AuthPolicy", config =>
+        {
+            config.PermitLimit = 5;
+            config.Window = TimeSpan.FromMinutes(1);
+            config.QueueProcessingOrder = QueueProcessingOrder.OldestFirst;
+            config.QueueLimit = 2;
+        });
+
+        // Política para endpoints públicos: 30 requisições por minuto
+        options.AddFixedWindowLimiter("PublicPolicy", config =>
+        {
+            config.PermitLimit = 30;
+            config.Window = TimeSpan.FromMinutes(1);
+        });
+    });
+
+    // CORS
+    builder.Services.AddCors(options =>
+    {
+        options.AddPolicy("DevelopmentPolicy", builder =>
+            builder.AllowAnyOrigin()
+                   .AllowAnyMethod()
+                   .AllowAnyHeader()
+                   .WithExposedHeaders("X-Total-Count", "X-Correlation-Id"));
+
+        options.AddPolicy("ProductionPolicy", builder =>
+            builder.WithOrigins(
+                    "https://hqverse.vercel.app",
+                    "https://hqverse.netlify.app",
+                    "https://hqverse-app.onrender.com")
+                   .AllowAnyMethod()
+                   .AllowAnyHeader()
+                   .AllowCredentials()
+                   .WithExposedHeaders("X-Total-Count", "X-Correlation-Id")
+                   .SetPreflightMaxAge(TimeSpan.FromMinutes(10)));
+    });
+
+    // HTTP Logging (observabilidade)
+    builder.Services.AddHttpLogging(logging =>
+    {
+        logging.LoggingFields = Microsoft.AspNetCore.HttpLogging.HttpLoggingFields.All;
+        logging.RequestBodyLogLimit = 4096;
+        logging.ResponseBodyLogLimit = 4096;
     });
 
     // Infrastructure
@@ -91,10 +160,10 @@ try
 
     var app = builder.Build();
 
-    // Mapear OpenAPI endpoint (necessário para Scalar)
+    // Mapear OpenAPI endpoint
     app.MapOpenApi();
 
-    // Scalar UI - acessível em /scalar
+    // Scalar UI
     app.MapScalarApiReference(options =>
     {
         options
@@ -108,10 +177,44 @@ try
     // Redirecionar raiz para Scalar
     app.MapGet("/", () => Results.Redirect("/scalar"));
 
-    // Use custom middlewares
+    // Use custom middlewares (ordem importa!)
     app.UseCorrelationId();
     app.UseRequestLogging();
     app.UseGlobalExceptionHandler();
+
+    // HTTP Logging
+    app.UseHttpLogging();
+
+    // Rate Limiter
+    app.UseRateLimiter();
+
+    // CORS - usar política de desenvolvimento ou produção
+    if (app.Environment.IsDevelopment())
+    {
+        app.UseCors("DevelopmentPolicy");
+    }
+    else
+    {
+        app.UseCors("ProductionPolicy");
+    }
+
+    // HTTPS Redirection (em produção)
+    if (!app.Environment.IsDevelopment())
+    {
+        app.UseHttpsRedirection();
+        app.UseHsts();
+    }
+
+    // Security Headers
+    app.Use(async (context, next) =>
+    {
+        context.Response.Headers.Append("X-Content-Type-Options", "nosniff");
+        context.Response.Headers.Append("X-Frame-Options", "DENY");
+        context.Response.Headers.Append("X-XSS-Protection", "1; mode=block");
+        context.Response.Headers.Append("Referrer-Policy", "strict-origin-when-cross-origin");
+        context.Response.Headers.Append("Permissions-Policy", "camera=(), microphone=(), geolocation=()");
+        await next();
+    });
 
     // Run database migrations
     using (var scope = app.Services.CreateScope())

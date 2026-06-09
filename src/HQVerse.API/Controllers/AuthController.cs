@@ -2,6 +2,7 @@
 using HQVerse.Application.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using System.Security.Claims;
 
 namespace HQVerse.API.Controllers;
@@ -27,9 +28,12 @@ public class AuthController : ControllerBase
     /// </summary>
     /// <response code="200">Usuário registrado com sucesso</response>
     /// <response code="409">Email ou username já existe</response>
+    /// <response code="429">Muitas tentativas. Aguarde.</response>
     [HttpPost("register")]
+    [EnableRateLimiting("AuthPolicy")]
     [ProducesResponseType(typeof(AuthResponseDto), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status409Conflict)]
+    [ProducesResponseType(StatusCodes.Status429TooManyRequests)]
     public async Task<ActionResult<AuthResponseDto>> Register(
         [FromBody] RegisterDto dto,
         CancellationToken cancellationToken)
@@ -43,9 +47,12 @@ public class AuthController : ControllerBase
     /// </summary>
     /// <response code="200">Login realizado com sucesso</response>
     /// <response code="401">Credenciais inválidas</response>
+    /// <response code="429">Muitas tentativas. Aguarde.</response>
     [HttpPost("login")]
+    [EnableRateLimiting("AuthPolicy")]
     [ProducesResponseType(typeof(AuthResponseDto), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status429TooManyRequests)]
     public async Task<ActionResult<AuthResponseDto>> Login(
         [FromBody] LoginDto dto,
         CancellationToken cancellationToken)
