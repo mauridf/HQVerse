@@ -1,3 +1,5 @@
+using HQVerse.Application.DependencyInjection;
+using HQVerse.CrossCutting.Extensions;
 using HQVerse.Infrastructure.Data.Migrations;
 using HQVerse.Infrastructure.DependencyInjection;
 using Serilog;
@@ -19,8 +21,14 @@ try
 
     // Add services
     builder.Services.AddInfrastructure(builder.Configuration);
+    builder.Services.AddApplication();
 
     var app = builder.Build();
+
+    // Use custom middlewares (ordem importa!)
+    app.UseCorrelationId();
+    app.UseRequestLogging();
+    app.UseGlobalExceptionHandler();
 
     // Run database migrations
     using (var scope = app.Services.CreateScope())
