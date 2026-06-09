@@ -36,3 +36,9 @@ coverage/
 TestResults/
 *.coverage
 "@ | Out-File -FilePath .gitignore -Encoding UTF8
+
+# Deploy
+publish/
+*.pubxml
+*.pubxml.user
+deploy.zip

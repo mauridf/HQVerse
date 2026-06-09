@@ -1,0 +1,30 @@
+services:
+  - type: web
+    name: hqverse-api
+    runtime: docker
+    repo: https://github.com/SEU_USUARIO/HQVerse
+    branch: main
+    plan: free
+    region: oregon
+    dockerfilePath: ./Dockerfile
+    healthCheckPath: /api/health
+    envVars:
+      - key: ASPNETCORE_ENVIRONMENT
+        value: Production
+      - key: ConnectionStrings__DefaultConnection
+        fromDatabase:
+          name: hqverse-db
+          property: connectionString
+      - key: Jwt__Secret
+        generateValue: true
+      - key: ComicVine__ApiKey
+        sync: false
+      - key: ASPNETCORE_URLS
+        value: http://+:8080
+
+databases:
+  - name: hqverse-db
+    databaseName: hqverse_prod
+    plan: free
+    region: oregon
+    ipAllowList: []

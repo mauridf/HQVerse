@@ -1,0 +1,62 @@
+name: Deploy to Render
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_DB: hqverse_test
+          POSTGRES_USER: hqverse_user
+          POSTGRES_PASSWORD: hqverse_password
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Setup .NET 10
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: '10.0.x'
+    
+    - name: Restore dependencies
+      run: dotnet restore
+    
+    - name: Build
+      run: dotnet build --configuration Release --no-restore
+    
+    - name: Test
+      run: dotnet test --configuration Release --no-build --verbosity normal
+      env:
+        ConnectionStrings__DefaultConnection: "Host=localhost;Database=hqverse_test;Username=hqverse_user;Password=hqverse_password"
+        Jwt__Secret: "GitHubActions-Test-JWT-Secret-AtLeast32Chars!!"
+    
+    - name: Publish
+      run: dotnet publish src/HQVerse.API/HQVerse.API.csproj -c Release -o publish --no-build
+
+  deploy:
+    needs: build-and-test
+    if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Deploy to Render
+      env:
+        RENDER_DEPLOY_HOOK: ${{ secrets.RENDER_DEPLOY_HOOK }}
+      run: |
+        curl -X POST "$RENDER_DEPLOY_HOOK"
+        echo "🚀 Deploy triggered on Render!"
