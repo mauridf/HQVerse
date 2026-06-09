@@ -1,3 +1,4 @@
+using System.Reflection;
 using System.Text;
 using HQVerse.Application.DependencyInjection;
 using HQVerse.CrossCutting.Extensions;
@@ -5,6 +6,7 @@ using HQVerse.Infrastructure.Data.Migrations;
 using HQVerse.Infrastructure.DependencyInjection;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
+using Scalar.AspNetCore;
 using Serilog;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -25,6 +27,35 @@ try
     // Add services to the container
     builder.Services.AddControllers();
     builder.Services.AddEndpointsApiExplorer();
+
+    // OpenAPI para .NET 10 (nativo, sem Swashbuckle)
+    builder.Services.AddOpenApi(options =>
+    {
+        options.AddDocumentTransformer((document, context, cancellationToken) =>
+        {
+            document.Info.Title = "HQVerse API";
+            document.Info.Version = "v1";
+            document.Info.Description = @"API para gestão de Scans de HQs - Comunidade de leitores de HQs.
+
+                ## Funcionalidades
+                - **Editorial**: Publishers, Characters, Teams, ComicSeries, ComicIssues, StoryArcs
+                - **Comunidade**: Usuários, Coleções, Reviews, Comentários, Favoritos
+                - **Scans**: ScanGroups, Scans, Links de download/leitura
+                - **Integração**: Comic Vine API para importação de metadados
+
+                ## Autenticação
+                A API usa JWT Bearer Token. Faça login em `/api/auth/login` e use o token no header:
+                `Authorization: Bearer {seu-token}`";
+
+            document.Info.Contact = new()
+            {
+                Name = "HQVerse Team",
+                Email = "contact@hqverse.dev"
+            };
+
+            return Task.CompletedTask;
+        });
+    });
 
     // Infrastructure
     builder.Services.AddInfrastructure(builder.Configuration);
@@ -60,6 +91,23 @@ try
 
     var app = builder.Build();
 
+    // Mapear OpenAPI endpoint (necessário para Scalar)
+    app.MapOpenApi();
+
+    // Scalar UI - acessível em /scalar
+    app.MapScalarApiReference(options =>
+    {
+        options
+            .WithTitle("HQVerse API")
+            .WithTheme(ScalarTheme.DeepSpace)
+            .WithDarkModeToggle(true)
+            .WithSidebar(true)
+            .WithDotNetFlag(false);
+    });
+
+    // Redirecionar raiz para Scalar
+    app.MapGet("/", () => Results.Redirect("/scalar"));
+
     // Use custom middlewares
     app.UseCorrelationId();
     app.UseRequestLogging();
@@ -78,15 +126,6 @@ try
 
     // Map controllers
     app.MapControllers();
-
-    // Health check endpoint
-    app.MapGet("/", () => Results.Ok(new
-    {
-        Name = "HQVerse API",
-        Version = "1.0.0",
-        Status = "Running",
-        Timestamp = DateTime.UtcNow
-    }));
 
     app.Run();
 }
