@@ -6,4 +6,8 @@
     <Project Path="src/HQVerse.Domain/HQVerse.Domain.csproj" />
     <Project Path="src/HQVerse.Infrastructure/HQVerse.Infrastructure.csproj" />
   </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/HQVerse.IntegrationTests/HQVerse.IntegrationTests.csproj" />
+    <Project Path="tests/HQVerse.UnitTests/HQVerse.UnitTests.csproj" />
+  </Folder>
 </Solution>
