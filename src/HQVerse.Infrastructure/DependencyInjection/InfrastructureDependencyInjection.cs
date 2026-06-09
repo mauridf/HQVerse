@@ -2,6 +2,7 @@
 using HQVerse.Infrastructure.Data.Context;
 using HQVerse.Infrastructure.Data.Migrations;
 using HQVerse.Infrastructure.Data.Repositories;
+using HQVerse.Infrastructure.ExternalServices.ComicVine;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -37,6 +38,14 @@ public static class InfrastructureDependencyInjection
 
         // Unit of Work
         services.AddScoped<IUnitOfWork, UnitOfWork>();
+
+        // Comic Vine Client
+        services.AddHttpClient<ComicVineClient>(client =>
+        {
+            client.BaseAddress = new Uri("https://comicvine.gamespot.com/api/");
+            client.DefaultRequestHeaders.Add("User-Agent", "HQVerse/1.0");
+            client.Timeout = TimeSpan.FromSeconds(30);
+        });
 
         return services;
     }

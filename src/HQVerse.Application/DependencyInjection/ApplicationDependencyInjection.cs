@@ -17,6 +17,7 @@ public static class ApplicationDependencyInjection
         services.AddScoped<IComicIssueService, ComicIssueService>();
         services.AddScoped<ISearchService, SearchService>();
         services.AddScoped<IAuthService, AuthService>();
+        services.AddScoped<IComicVineService, ComicVineSyncService>();
 
         return services;
     }
