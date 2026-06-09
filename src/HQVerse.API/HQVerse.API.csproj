@@ -18,7 +18,6 @@
 
   <ItemGroup>
     <Folder Include="Config\" />
-    <Folder Include="Controllers\" />
     <Folder Include="Middlewares\" />
   </ItemGroup>
 
