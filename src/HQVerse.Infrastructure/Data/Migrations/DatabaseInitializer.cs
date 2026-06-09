@@ -52,9 +52,37 @@ public class DatabaseInitializer
         builder.Database = "postgres";
         var masterConnectionString = builder.ConnectionString;
 
-        // Usa a API correta do DbUp para PostgreSQL
-        DbUp.EnsureDatabase.For.PostgresqlDatabase(masterConnectionString, databaseName);
+        // Cria o banco manualmente se não existir (evita dependência de EnsureDatabase extension)
+        using (var connection = new Npgsql.NpgsqlConnection(masterConnectionString))
+        {
+            connection.Open();
 
-        _logger.LogInformation("Database '{DatabaseName}' verified/created.", databaseName);
+            using (var checkCmd = connection.CreateCommand())
+            {
+                checkCmd.CommandText = "SELECT 1 FROM pg_database WHERE datname = @name";
+                var param = checkCmd.CreateParameter();
+                param.ParameterName = "name";
+                param.Value = databaseName;
+                checkCmd.Parameters.Add(param);
+
+                var exists = checkCmd.ExecuteScalar() != null;
+
+                if (!exists)
+                {
+                    using (var createCmd = connection.CreateCommand())
+                    {
+                        // Nome do banco pode precisar ser escapado; aqui usamos identificador entre aspas
+                        createCmd.CommandText = $"CREATE DATABASE \"{databaseName}\"";
+                        createCmd.ExecuteNonQuery();
+                    }
+
+                    _logger.LogInformation("Database '{DatabaseName}' created.", databaseName);
+                }
+                else
+                {
+                    _logger.LogInformation("Database '{DatabaseName}' already exists.", databaseName);
+                }
+            }
+        }
     }
 }

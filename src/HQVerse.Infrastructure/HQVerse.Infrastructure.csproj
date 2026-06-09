@@ -18,8 +18,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="Data\Context\" />
-    <Folder Include="Data\Repositories\" />
     <Folder Include="ExternalServices\ComicVine\" />
   </ItemGroup>
 
