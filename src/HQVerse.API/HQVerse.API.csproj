@@ -1,0 +1,26 @@
+﻿<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <ItemGroup>
+    <ProjectReference Include="..\HQVerse.Domain\HQVerse.Domain.csproj" />
+    <ProjectReference Include="..\HQVerse.Application\HQVerse.Application.csproj" />
+    <ProjectReference Include="..\HQVerse.Infrastructure\HQVerse.Infrastructure.csproj" />
+    <ProjectReference Include="..\HQVerse.CrossCutting\HQVerse.CrossCutting.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="10.0.9" />
+    <PackageReference Include="Scalar.AspNetCore" Version="2.16.2" />
+    <PackageReference Include="Serilog.AspNetCore" Version="10.0.0" />
+    <PackageReference Include="Serilog.Sinks.Console" Version="6.1.1" />
+    <PackageReference Include="Serilog.Sinks.PostgreSQL" Version="2.3.0" />
+    <PackageReference Include="Swashbuckle.AspNetCore" Version="10.2.1" />
+  </ItemGroup>
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <UserSecretsId>bebdde2a-32d3-4534-8a36-6b0b0b4d9567</UserSecretsId>
+  </PropertyGroup>
+
+</Project>

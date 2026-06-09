@@ -1,0 +1,9 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/HQVerse.API/HQVerse.API.csproj" />
+    <Project Path="src/HQVerse.Application/HQVerse.Application.csproj" />
+    <Project Path="src/HQVerse.CrossCutting/HQVerse.CrossCutting.csproj" />
+    <Project Path="src/HQVerse.Domain/HQVerse.Domain.csproj" />
+    <Project Path="src/HQVerse.Infrastructure/HQVerse.Infrastructure.csproj" />
+  </Folder>
+</Solution>

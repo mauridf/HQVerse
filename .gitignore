@@ -1,0 +1,38 @@
+@"
+# .NET
+bin/
+obj/
+*.user
+*.suo
+*.cache
+*.vs/
+.vscode/
+
+# Secrets
+appsettings.*.json
+!appsettings.json
+!appsettings.Development.json
+secrets.json
+
+# Database
+*.db
+*.db-shm
+*.db-wal
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.idea/
+*.swp
+*.swo
+
+# Docker
+docker-compose.override.yml
+
+# Coverage
+coverage/
+TestResults/
+*.coverage
+"@ | Out-File -FilePath .gitignore -Encoding UTF8
