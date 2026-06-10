@@ -21,6 +21,7 @@ public static class ApplicationDependencyInjection
         services.AddScoped<IReviewService, ReviewService>();
         services.AddScoped<ICollectionService, CollectionService>();
         services.AddScoped<IScanService, ScanService>();
+        services.AddScoped<IDashboardService, DashboardService>();
 
         return services;
     }
