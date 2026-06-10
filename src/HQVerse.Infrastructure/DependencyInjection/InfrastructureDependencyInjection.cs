@@ -1,4 +1,5 @@
-﻿using HQVerse.Domain.Interfaces;
+﻿using HQVerse.Application.Interfaces;
+using HQVerse.Domain.Interfaces;
 using HQVerse.Infrastructure.Data.Context;
 using HQVerse.Infrastructure.Data.Migrations;
 using HQVerse.Infrastructure.Data.Repositories;
@@ -40,7 +41,7 @@ public static class InfrastructureDependencyInjection
         services.AddScoped<IUnitOfWork, UnitOfWork>();
 
         // Comic Vine Client
-        services.AddHttpClient<ComicVineClient>(client =>
+        services.AddHttpClient<IComicVineClient, ComicVineClient>(client =>
         {
             client.BaseAddress = new Uri("https://comicvine.gamespot.com/api/");
             client.DefaultRequestHeaders.Add("User-Agent", "HQVerse/1.0");

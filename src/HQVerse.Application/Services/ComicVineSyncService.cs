@@ -2,18 +2,17 @@
 using HQVerse.Application.Interfaces;
 using HQVerse.Domain.Entities;
 using HQVerse.Domain.Interfaces;
-using HQVerse.Infrastructure.ExternalServices.ComicVine;
 using Microsoft.Extensions.Logging;
 
 namespace HQVerse.Application.Services;
 
 public class ComicVineSyncService : IComicVineService
 {
-    private readonly ComicVineClient _client;
+    private readonly IComicVineClient _client;
     private readonly IUnitOfWork _unitOfWork;
     private readonly ILogger<ComicVineSyncService> _logger;
 
-    public ComicVineSyncService(ComicVineClient client, IUnitOfWork unitOfWork, ILogger<ComicVineSyncService> logger)
+    public ComicVineSyncService(IComicVineClient client, IUnitOfWork unitOfWork, ILogger<ComicVineSyncService> logger)
     {
         _client = client;
         _unitOfWork = unitOfWork;

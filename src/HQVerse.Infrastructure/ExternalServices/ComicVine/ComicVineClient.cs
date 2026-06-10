@@ -1,11 +1,12 @@
 ﻿using System.Text.Json;
 using HQVerse.Application.DTOs.ComicVine;
+using HQVerse.Application.Interfaces;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 
 namespace HQVerse.Infrastructure.ExternalServices.ComicVine;
 
-public class ComicVineClient
+public class ComicVineClient : IComicVineClient
 {
     private readonly HttpClient _httpClient;
     private readonly string _apiKey;
