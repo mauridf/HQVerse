@@ -20,17 +20,17 @@ public class ComicVineSyncService : IComicVineService
     }
 
     public async Task<List<ComicVineSearchResult>> SearchAsync(
-        string query, string resourceType, CancellationToken cancellationToken = default)
+    string query, string resourceType, CancellationToken cancellationToken = default)
     {
         var response = await _client.SearchAsync(resourceType, query, 20, cancellationToken);
-        return response.Results;
+        return response.Results; // Agora é List<ComicVineSearchResult>
     }
 
     public async Task<ComicVineSearchResult?> GetByIdAsync(
         string resourceType, int comicVineId, CancellationToken cancellationToken = default)
     {
         var response = await _client.GetByIdAsync(resourceType, comicVineId, cancellationToken);
-        return response.Results;
+        return response.Results; // Agora é ComicVineSearchResult (objeto único)
     }
 
     // ==================== PUBLISHERS ====================

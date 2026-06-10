@@ -142,3 +142,59 @@ public class ComicVineVolume
     [JsonPropertyName("name")]
     public string Name { get; set; } = string.Empty;
 }
+
+// Resposta para GetById (results é um objeto único)
+public class ComicVineSingleResponse
+{
+    [JsonPropertyName("error")]
+    public string Error { get; set; } = "OK";
+
+    [JsonPropertyName("limit")]
+    public int Limit { get; set; }
+
+    [JsonPropertyName("offset")]
+    public int Offset { get; set; }
+
+    [JsonPropertyName("number_of_page_results")]
+    public int NumberOfPageResults { get; set; }
+
+    [JsonPropertyName("number_of_total_results")]
+    public int NumberOfTotalResults { get; set; }
+
+    [JsonPropertyName("status_code")]
+    public int StatusCode { get; set; }
+
+    [JsonPropertyName("results")]
+    public ComicVineSearchResult Results { get; set; } = new();
+
+    [JsonPropertyName("version")]
+    public string Version { get; set; } = string.Empty;
+}
+
+// Resposta para Search (results é um array)
+public class ComicVineListResponse
+{
+    [JsonPropertyName("error")]
+    public string Error { get; set; } = "OK";
+
+    [JsonPropertyName("limit")]
+    public int Limit { get; set; }
+
+    [JsonPropertyName("offset")]
+    public int Offset { get; set; }
+
+    [JsonPropertyName("number_of_page_results")]
+    public int NumberOfPageResults { get; set; }
+
+    [JsonPropertyName("number_of_total_results")]
+    public int NumberOfTotalResults { get; set; }
+
+    [JsonPropertyName("status_code")]
+    public int StatusCode { get; set; }
+
+    [JsonPropertyName("results")]
+    public List<ComicVineSearchResult> Results { get; set; } = new();
+
+    [JsonPropertyName("version")]
+    public string Version { get; set; } = string.Empty;
+}

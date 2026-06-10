@@ -28,11 +28,8 @@ public class AuthServiceTests
         _logger = Substitute.For<ILogger<AuthService>>();
 
         // Configurar AutoMapper - API corrigida para versão 16.x
-        var mapperConfig = new MapperConfiguration(cfg => {
-            cfg.Internal().MethodMappingEnabled = false;
-            cfg.AddProfile<MappingProfile>();
-        });
-        _mapper = mapperConfig.CreateMapper();
+        var config = new MapperConfiguration(cfg => cfg.AddProfile(new MappingProfile()));
+        _mapper = new Mapper(config);
 
         // Configurar Configuration com JWT Secret
         var inMemorySettings = new Dictionary<string, string?>

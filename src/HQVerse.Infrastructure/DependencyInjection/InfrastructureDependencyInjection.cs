@@ -41,11 +41,7 @@ public static class InfrastructureDependencyInjection
         services.AddScoped<IUnitOfWork, UnitOfWork>();
 
         // Comic Vine Client
-        services.AddHttpClient<IComicVineClient, ComicVineClient>(client =>
-        {
-            client.Timeout = TimeSpan.FromSeconds(30);
-            client.DefaultRequestHeaders.Add("User-Agent", "HQVerse/2.0");
-        });
+        services.AddSingleton<IComicVineClient, ComicVineClient>();
 
         return services;
     }

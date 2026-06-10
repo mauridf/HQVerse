@@ -26,8 +26,8 @@ public class PublisherServiceTests
         _logger = Substitute.For<ILogger<PublisherService>>();
 
         // Configurar AutoMapper real
-        _mapper = new MapperConfiguration(cfg => cfg.AddProfile<MappingProfile>())
-            .CreateMapper();
+        var config = new MapperConfiguration(cfg => cfg.AddProfile(new MappingProfile()));
+        _mapper = new Mapper(config);
 
         // Configurar UnitOfWork para retornar o repositório mockado
         _unitOfWork.Publishers.Returns(_publisherRepository);

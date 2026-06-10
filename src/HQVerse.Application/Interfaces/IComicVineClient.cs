@@ -4,9 +4,9 @@ namespace HQVerse.Application.Interfaces;
 
 public interface IComicVineClient
 {
-    Task<ComicVineResponse<List<ComicVineSearchResult>>> SearchAsync(
+    Task<ComicVineListResponse> SearchAsync(
         string resourceType, string query, int limit = 10, CancellationToken cancellationToken = default);
 
-    Task<ComicVineResponse<ComicVineSearchResult>> GetByIdAsync(
+    Task<ComicVineSingleResponse> GetByIdAsync(
         string resourceType, int comicVineId, CancellationToken cancellationToken = default);
 }
