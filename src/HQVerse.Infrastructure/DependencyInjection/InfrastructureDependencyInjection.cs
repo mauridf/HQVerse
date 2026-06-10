@@ -43,9 +43,8 @@ public static class InfrastructureDependencyInjection
         // Comic Vine Client
         services.AddHttpClient<IComicVineClient, ComicVineClient>(client =>
         {
-            client.BaseAddress = new Uri("https://comicvine.gamespot.com/api/");
-            client.DefaultRequestHeaders.Add("User-Agent", "HQVerse/1.0");
             client.Timeout = TimeSpan.FromSeconds(30);
+            client.DefaultRequestHeaders.Add("User-Agent", "HQVerse/2.0");
         });
 
         return services;

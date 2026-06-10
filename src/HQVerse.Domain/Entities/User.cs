@@ -1,6 +1,4 @@
-﻿using HQVerse.Domain.Enums;
-
-namespace HQVerse.Domain.Entities;
+﻿namespace HQVerse.Domain.Entities;
 
 public class User
 {
@@ -12,7 +10,7 @@ public class User
     public string? AvatarUrl { get; set; }
     public string? BannerUrl { get; set; }
     public string? Bio { get; set; }
-    public UserRole Role { get; set; } = UserRole.User;
+    public string Role { get; set; } = "User";
     public string? RefreshToken { get; set; }
     public DateTime? RefreshTokenExpiryTime { get; set; }
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;

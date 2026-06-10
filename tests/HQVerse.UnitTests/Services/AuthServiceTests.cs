@@ -8,6 +8,7 @@ using Microsoft.Extensions.Logging;
 using NSubstitute;
 using AutoMapper;
 using HQVerse.Application.Mappings;
+using AutoMapper.Internal;
 
 namespace HQVerse.UnitTests.Services;
 
@@ -26,9 +27,12 @@ public class AuthServiceTests
         _unitOfWork = Substitute.For<IUnitOfWork>();
         _logger = Substitute.For<ILogger<AuthService>>();
 
-        // Configurar AutoMapper
-        _mapper = new MapperConfiguration(cfg => cfg.AddProfile<MappingProfile>())
-            .CreateMapper();
+        // Configurar AutoMapper - API corrigida para versão 16.x
+        var mapperConfig = new MapperConfiguration(cfg => {
+            cfg.Internal().MethodMappingEnabled = false;
+            cfg.AddProfile<MappingProfile>();
+        });
+        _mapper = mapperConfig.CreateMapper();
 
         // Configurar Configuration com JWT Secret
         var inMemorySettings = new Dictionary<string, string?>
@@ -112,7 +116,7 @@ public class AuthServiceTests
             DisplayName = "Test User",
             Email = "test@email.com",
             PasswordHash = BCrypt.Net.BCrypt.HashPassword("StrongPass123!"),
-            Role = Domain.Enums.UserRole.User
+            Role = "User"
         };
 
         _userRepository.GetByEmailAsync(dto.Email).Returns(user);

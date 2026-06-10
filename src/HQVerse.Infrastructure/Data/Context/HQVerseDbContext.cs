@@ -196,6 +196,7 @@ public class HQVerseDbContext : DbContext
             entity.Property(e => e.DisplayName).IsRequired().HasMaxLength(255);
             entity.Property(e => e.Email).IsRequired().HasMaxLength(255);
             entity.Property(e => e.PasswordHash).IsRequired().HasMaxLength(500);
+            entity.Property(e => e.Role).IsRequired().HasMaxLength(50).HasDefaultValue("User");
             entity.Property(e => e.AvatarUrl).HasMaxLength(500);
             entity.Property(e => e.BannerUrl).HasMaxLength(500);
             entity.Property(e => e.RefreshToken).HasMaxLength(500);
