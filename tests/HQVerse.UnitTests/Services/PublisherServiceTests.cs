@@ -1,13 +1,14 @@
-﻿using FluentAssertions;
+﻿using AutoMapper;
+using FluentAssertions;
 using HQVerse.Application.DTOs;
 using HQVerse.Application.DTOs.Publishers;
+using HQVerse.Application.Mappings;
 using HQVerse.Application.Services;
 using HQVerse.Domain.Entities;
 using HQVerse.Domain.Interfaces;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using NSubstitute;
-using AutoMapper;
-using HQVerse.Application.Mappings;
 
 namespace HQVerse.UnitTests.Services;
 
@@ -25,11 +26,12 @@ public class PublisherServiceTests
         _unitOfWork = Substitute.For<IUnitOfWork>();
         _logger = Substitute.For<ILogger<PublisherService>>();
 
-        // Configurar AutoMapper real
-        var config = new MapperConfiguration(cfg => cfg.AddProfile(new MappingProfile()));
-        _mapper = new Mapper(config);
+        var services = new ServiceCollection();
+        services.AddLogging();
+        services.AddAutoMapper(cfg => cfg.AddProfile<MappingProfile>(), typeof(MappingProfile).Assembly);
+        var provider = services.BuildServiceProvider();
+        _mapper = provider.GetRequiredService<IMapper>();
 
-        // Configurar UnitOfWork para retornar o repositório mockado
         _unitOfWork.Publishers.Returns(_publisherRepository);
 
         _sut = new PublisherService(_unitOfWork, _mapper, _logger);

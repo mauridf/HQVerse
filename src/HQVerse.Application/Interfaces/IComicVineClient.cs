@@ -9,4 +9,7 @@ public interface IComicVineClient
 
     Task<ComicVineSingleResponse> GetByIdAsync(
         string resourceType, int comicVineId, CancellationToken cancellationToken = default);
+
+    Task<T?> GetDetailAsync<T>(
+        string resourceType, int comicVineId, CancellationToken cancellationToken = default) where T : class;
 }

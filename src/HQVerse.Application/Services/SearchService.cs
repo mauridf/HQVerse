@@ -1,5 +1,4 @@
-﻿using AutoMapper;
-using HQVerse.Application.DTOs.Search;
+﻿using HQVerse.Application.DTOs.Search;
 using HQVerse.Application.Interfaces;
 using HQVerse.Domain.Interfaces;
 using Microsoft.Extensions.Logging;
@@ -28,6 +27,9 @@ public class SearchService : ISearchService
         var comicSeries = await _unitOfWork.ComicSeries.SearchByNameAsync(query, cancellationToken);
         var comicIssues = await _unitOfWork.ComicIssues.SearchAsync(query, cancellationToken);
         var publishers = await _unitOfWork.Publishers.SearchByNameAsync(query, cancellationToken);
+        var teams = await _unitOfWork.Teams.FindAsync(t => t.Name.Contains(query), cancellationToken);
+        var creators = await _unitOfWork.Creators.FindAsync(c => c.Name.Contains(query), cancellationToken);
+        var storyArcs = await _unitOfWork.StoryArcs.FindAsync(a => a.Name.Contains(query), cancellationToken);
 
         return new SearchResultDto
         {
@@ -65,6 +67,33 @@ public class SearchService : ISearchService
                 Type = "Publisher",
                 ImageUrl = p.LogoUrl,
                 Subtitle = p.Country
+            }).Take(10).ToList(),
+
+            Teams = teams.Select(t => new SearchItemDto
+            {
+                Id = t.Id,
+                Name = t.Name,
+                Type = "Team",
+                ImageUrl = t.ImageUrl,
+                Subtitle = t.Publisher?.Name
+            }).Take(10).ToList(),
+
+            Creators = creators.Select(c => new SearchItemDto
+            {
+                Id = c.Id,
+                Name = c.Name,
+                Type = "Creator",
+                ImageUrl = c.ImageUrl,
+                Subtitle = c.Country
+            }).Take(10).ToList(),
+
+            StoryArcs = storyArcs.Select(sa => new SearchItemDto
+            {
+                Id = sa.Id,
+                Name = sa.Name,
+                Type = "StoryArc",
+                ImageUrl = sa.ImageUrl,
+                Subtitle = sa.Publisher?.Name
             }).Take(10).ToList()
         };
     }

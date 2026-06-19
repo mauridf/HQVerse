@@ -32,6 +32,6 @@ public class HealthEndpointTests : IClassFixture<WebApplicationFactory<Program>>
 
         // Assert
         content.Should().Contain("Healthy");
-        content.Should().Contain("Version");
+        content.Should().Contain("version");
     }
 }

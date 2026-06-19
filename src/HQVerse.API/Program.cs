@@ -1,6 +1,7 @@
 using System.Reflection;
 using System.Text;
 using System.Threading.RateLimiting;
+using FluentValidation;
 using HQVerse.Application.DependencyInjection;
 using HQVerse.CrossCutting.Extensions;
 using HQVerse.Infrastructure.Data.Migrations;
@@ -30,6 +31,18 @@ try
     builder.Services.AddControllers();
     builder.Services.AddEndpointsApiExplorer();
 
+    // FluentValidation
+    builder.Services.AddValidatorsFromAssembly(Assembly.GetExecutingAssembly());
+
+    // Response Compression
+    builder.Services.AddResponseCompression(options =>
+    {
+        options.EnableForHttps = true;
+    });
+
+    // Health Checks
+    builder.Services.AddHealthChecks();
+
     // OpenAPI para .NET 10
     builder.Services.AddOpenApi(options =>
     {
@@ -40,7 +53,7 @@ try
             document.Info.Description = @"API para gestão de Scans de HQs - Comunidade de leitores de HQs.
 
                 ## Funcionalidades
-                - **Editorial**: Publishers, Characters, Teams, ComicSeries, ComicIssues, StoryArcs
+                - **Editorial**: Publishers, Characters, Teams, Universes, Creators, ComicSeries, ComicIssues, StoryArcs
                 - **Comunidade**: Usuários, Coleções, Reviews, Comentários, Favoritos
                 - **Scans**: ScanGroups, Scans, Links de download/leitura
                 - **Integração**: Comic Vine API para importação de metadados
@@ -176,6 +189,12 @@ try
 
     // Redirecionar raiz para Scalar
     app.MapGet("/", () => Results.Redirect("/scalar"));
+
+    // Health check endpoint
+    app.MapHealthChecks("/health");
+
+    // Response Compression
+    app.UseResponseCompression();
 
     // Use custom middlewares (ordem importa!)
     app.UseCorrelationId();

@@ -1,14 +1,14 @@
-﻿using FluentAssertions;
+﻿using AutoMapper;
+using FluentAssertions;
 using HQVerse.Application.DTOs.Auth;
+using HQVerse.Application.Mappings;
 using HQVerse.Application.Services;
 using HQVerse.Domain.Entities;
 using HQVerse.Domain.Interfaces;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using NSubstitute;
-using AutoMapper;
-using HQVerse.Application.Mappings;
-using AutoMapper.Internal;
 
 namespace HQVerse.UnitTests.Services;
 
@@ -27,11 +27,12 @@ public class AuthServiceTests
         _unitOfWork = Substitute.For<IUnitOfWork>();
         _logger = Substitute.For<ILogger<AuthService>>();
 
-        // Configurar AutoMapper - API corrigida para versão 16.x
-        var config = new MapperConfiguration(cfg => cfg.AddProfile(new MappingProfile()));
-        _mapper = new Mapper(config);
+        var services = new ServiceCollection();
+        services.AddLogging();
+        services.AddAutoMapper(cfg => cfg.AddProfile<MappingProfile>(), typeof(MappingProfile).Assembly);
+        var provider = services.BuildServiceProvider();
+        _mapper = provider.GetRequiredService<IMapper>();
 
-        // Configurar Configuration com JWT Secret
         var inMemorySettings = new Dictionary<string, string?>
         {
             { "Jwt:Secret", "HQVerse-Test-JWT-Secret-Key-AtLeast32Chars!!" }

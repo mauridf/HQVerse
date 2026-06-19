@@ -1,37 +1,32 @@
-﻿using HQVerse.Application.DTOs.ComicSeries;
-using HQVerse.Domain.Interfaces;
+﻿using HQVerse.Application.DTOs;
+using HQVerse.Application.DTOs.ComicSeries;
+using HQVerse.Application.Interfaces;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace HQVerse.API.Controllers;
 
-/// <summary>
-/// Gerencia séries de quadrinhos (ex: Batman 2016, Amazing Spider-Man 2022)
-/// </summary>
 public class ComicSeriesController : BaseApiController
 {
-    private readonly IComicSeriesRepository _seriesRepository;
+    private readonly IComicSeriesService _seriesService;
     private readonly ILogger<ComicSeriesController> _logger;
 
-    public ComicSeriesController(IComicSeriesRepository seriesRepository, ILogger<ComicSeriesController> logger)
+    public ComicSeriesController(IComicSeriesService seriesService, ILogger<ComicSeriesController> logger)
     {
-        _seriesRepository = seriesRepository;
+        _seriesService = seriesService;
         _logger = logger;
     }
 
-    /// <summary>
-    /// Lista todas as séries
-    /// </summary>
     [HttpGet]
-    [ProducesResponseType(typeof(IEnumerable<ComicSeriesDto>), StatusCodes.Status200OK)]
-    public async Task<ActionResult<IEnumerable<ComicSeriesDto>>> GetAll(CancellationToken cancellationToken)
+    [ProducesResponseType(typeof(PaginatedResult<ComicSeriesDto>), StatusCodes.Status200OK)]
+    public async Task<ActionResult<PaginatedResult<ComicSeriesDto>>> GetAll(
+        [FromQuery] PaginationParams paginationParams,
+        CancellationToken cancellationToken)
     {
-        var series = await _seriesRepository.GetAllAsync(cancellationToken);
-        return Ok(series);
+        var result = await _seriesService.GetAllAsync(paginationParams, cancellationToken);
+        return Ok(result);
     }
 
-    /// <summary>
-    /// Busca séries por nome
-    /// </summary>
     [HttpGet("search")]
     [ProducesResponseType(typeof(IEnumerable<ComicSeriesDto>), StatusCodes.Status200OK)]
     public async Task<ActionResult<IEnumerable<ComicSeriesDto>>> Search(
@@ -40,22 +35,51 @@ public class ComicSeriesController : BaseApiController
     {
         if (string.IsNullOrWhiteSpace(query))
             return Ok(Enumerable.Empty<ComicSeriesDto>());
-
-        var series = await _seriesRepository.SearchByNameAsync(query, cancellationToken);
+        var series = await _seriesService.SearchByNameAsync(query, cancellationToken);
         return Ok(series);
     }
 
-    /// <summary>
-    /// Obtém uma série com suas edições
-    /// </summary>
     [HttpGet("{id:int}")]
     [ProducesResponseType(typeof(ComicSeriesDto), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<ActionResult<ComicSeriesDto>> GetById(
-        int id,
+    public async Task<ActionResult<ComicSeriesDto>> GetById(int id, CancellationToken cancellationToken)
+    {
+        var series = await _seriesService.GetByIdAsync(id, cancellationToken);
+        return series is null ? NotFound() : Ok(series);
+    }
+
+    [HttpPost]
+    [Authorize]
+    [ProducesResponseType(typeof(ComicSeriesDto), StatusCodes.Status201Created)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    public async Task<ActionResult<ComicSeriesDto>> Create(
+        [FromBody] CreateComicSeriesDto dto,
         CancellationToken cancellationToken)
     {
-        var series = await _seriesRepository.GetWithIssuesAsync(id, cancellationToken);
+        var series = await _seriesService.CreateAsync(dto, cancellationToken);
+        return CreatedAtAction(nameof(GetById), new { id = series.Id }, series);
+    }
+
+    [HttpPut("{id:int}")]
+    [Authorize]
+    [ProducesResponseType(typeof(ComicSeriesDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<ActionResult<ComicSeriesDto>> Update(
+        int id,
+        [FromBody] CreateComicSeriesDto dto,
+        CancellationToken cancellationToken)
+    {
+        var series = await _seriesService.UpdateAsync(id, dto, cancellationToken);
         return series is null ? NotFound() : Ok(series);
+    }
+
+    [HttpDelete("{id:int}")]
+    [Authorize(Roles = "Admin,Moderator")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> Delete(int id, CancellationToken cancellationToken)
+    {
+        var deleted = await _seriesService.DeleteAsync(id, cancellationToken);
+        return deleted ? NoContent() : NotFound();
     }
 }

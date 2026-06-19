@@ -191,15 +191,6 @@ public class ReviewService : IReviewService
         if (review is null)
             throw new EntityNotFoundException(nameof(Review), reviewId);
 
-        // Verificar se já curtiu
-        var existingLikes = await _unitOfWork.Reviews.FindAsync(
-            r => r.Id == reviewId, cancellationToken);
-
-        // Buscar like específico
-        var likes = await _unitOfWork.Comments.FindAsync(
-            c => c.ReviewId == reviewId, cancellationToken);
-
-        // Usar o método correto - verificar se o like existe
         var likeExists = review.Likes.Any(l => l.UserId == userId);
 
         if (likeExists)

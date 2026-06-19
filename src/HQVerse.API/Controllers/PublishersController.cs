@@ -1,6 +1,7 @@
 ﻿using HQVerse.Application.DTOs;
 using HQVerse.Application.DTOs.Publishers;
 using HQVerse.Application.Interfaces;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace HQVerse.API.Controllers;
@@ -50,6 +51,7 @@ public class PublishersController : BaseApiController
     /// Cria uma nova editora
     /// </summary>
     [HttpPost]
+    [Authorize]
     [ProducesResponseType(typeof(PublisherDto), StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     public async Task<ActionResult<PublisherDto>> Create(
@@ -64,6 +66,7 @@ public class PublishersController : BaseApiController
     /// Atualiza uma editora existente
     /// </summary>
     [HttpPut("{id:int}")]
+    [Authorize]
     [ProducesResponseType(typeof(PublisherDto), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<ActionResult<PublisherDto>> Update(
@@ -79,6 +82,7 @@ public class PublishersController : BaseApiController
     /// Remove uma editora
     /// </summary>
     [HttpDelete("{id:int}")]
+    [Authorize(Roles = "Admin,Moderator")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> Delete(

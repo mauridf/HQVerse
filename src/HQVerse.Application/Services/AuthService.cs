@@ -77,6 +77,53 @@ public class AuthService : IAuthService
         return await GenerateAuthResponse(user, cancellationToken);
     }
 
+    public async Task<UserDto> UpdateProfileAsync(int userId, UpdateUserDto dto, CancellationToken cancellationToken = default)
+    {
+        var user = await _unitOfWork.Users.GetByIdAsync(userId, cancellationToken);
+        if (user is null)
+            throw new Domain.Exceptions.EntityNotFoundException(nameof(User), userId);
+
+        if (dto.DisplayName is not null)
+            user.DisplayName = dto.DisplayName;
+        if (dto.Bio is not null)
+            user.Bio = dto.Bio;
+        if (dto.AvatarUrl is not null)
+            user.AvatarUrl = dto.AvatarUrl;
+        if (dto.BannerUrl is not null)
+            user.BannerUrl = dto.BannerUrl;
+
+        user.UpdatedAt = DateTime.UtcNow;
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
+
+        _logger.LogInformation("User profile updated: {UserId}", userId);
+        return _mapper.Map<UserDto>(user);
+    }
+
+    public async Task ChangePasswordAsync(int userId, string currentPassword, string newPassword, CancellationToken cancellationToken = default)
+    {
+        var user = await _unitOfWork.Users.GetByIdAsync(userId, cancellationToken);
+        if (user is null)
+            throw new Domain.Exceptions.EntityNotFoundException(nameof(User), userId);
+
+        if (!BCrypt.Net.BCrypt.Verify(currentPassword, user.PasswordHash))
+            throw new UnauthorizedAccessException("Current password is incorrect.");
+
+        user.PasswordHash = BCrypt.Net.BCrypt.HashPassword(newPassword);
+        user.UpdatedAt = DateTime.UtcNow;
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
+
+        _logger.LogInformation("Password changed for user: {UserId}", userId);
+    }
+
+    public async Task<UserDto> GetProfileAsync(int userId, CancellationToken cancellationToken = default)
+    {
+        var user = await _unitOfWork.Users.GetByIdAsync(userId, cancellationToken);
+        if (user is null)
+            throw new InvalidOperationException("User not found.");
+
+        return _mapper.Map<UserDto>(user);
+    }
+
     public async Task LogoutAsync(int userId, CancellationToken cancellationToken = default)
     {
         var user = await _unitOfWork.Users.GetByIdAsync(userId, cancellationToken);

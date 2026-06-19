@@ -24,6 +24,10 @@ public class UnitOfWork : IUnitOfWork
     public IRepository<Domain.Entities.Comment> Comments { get; }
     public IRepository<Domain.Entities.ExternalMapping> ExternalMappings { get; }
     public IRepository<Domain.Entities.ReadingProgress> ReadingProgresses { get; }
+    public IRepository<Domain.Entities.Universe> Universes { get; }
+    public IRepository<Domain.Entities.UserFavorite> Favorites { get; }
+    public IRepository<Domain.Entities.ReviewLike> ReviewLikes { get; }
+    public IRepository<Domain.Entities.ScanLink> ScanLinks { get; }
 
     public UnitOfWork(HQVerseDbContext context,
         IPublisherRepository publishers,
@@ -49,6 +53,10 @@ public class UnitOfWork : IUnitOfWork
         Comments = new Repository<Domain.Entities.Comment>(context);
         ExternalMappings = new Repository<Domain.Entities.ExternalMapping>(context);
         ReadingProgresses = new Repository<Domain.Entities.ReadingProgress>(context);
+        Universes = new Repository<Domain.Entities.Universe>(context);
+        Favorites = new Repository<Domain.Entities.UserFavorite>(context);
+        ReviewLikes = new Repository<Domain.Entities.ReviewLike>(context);
+        ScanLinks = new Repository<Domain.Entities.ScanLink>(context);
     }
 
     public async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)

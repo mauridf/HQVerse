@@ -1,6 +1,7 @@
 ﻿using HQVerse.Application.DTOs;
 using HQVerse.Application.DTOs.ComicIssues;
 using HQVerse.Application.Interfaces;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace HQVerse.API.Controllers;
@@ -64,6 +65,7 @@ public class ComicIssuesController : BaseApiController
     /// Cria uma nova edição
     /// </summary>
     [HttpPost]
+    [Authorize]
     [ProducesResponseType(typeof(ComicIssueDto), StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     public async Task<ActionResult<ComicIssueDto>> Create(

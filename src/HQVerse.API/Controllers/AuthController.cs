@@ -1,5 +1,6 @@
 ﻿using HQVerse.Application.DTOs.Auth;
 using HQVerse.Application.Interfaces;
+using HQVerse.Domain.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
@@ -7,9 +8,6 @@ using System.Security.Claims;
 
 namespace HQVerse.API.Controllers;
 
-/// <summary>
-/// Gerencia autenticação de usuários (registro, login, refresh token, logout)
-/// </summary>
 [ApiController]
 [Route("api/[controller]")]
 public class AuthController : ControllerBase
@@ -23,12 +21,12 @@ public class AuthController : ControllerBase
         _logger = logger;
     }
 
-    /// <summary>
-    /// Registra um novo usuário
-    /// </summary>
-    /// <response code="200">Usuário registrado com sucesso</response>
-    /// <response code="409">Email ou username já existe</response>
-    /// <response code="429">Muitas tentativas. Aguarde.</response>
+    private int GetUserId()
+    {
+        var claim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        return claim is not null ? int.Parse(claim) : 0;
+    }
+
     [HttpPost("register")]
     [EnableRateLimiting("AuthPolicy")]
     [ProducesResponseType(typeof(AuthResponseDto), StatusCodes.Status200OK)]
@@ -42,12 +40,6 @@ public class AuthController : ControllerBase
         return Ok(result);
     }
 
-    /// <summary>
-    /// Realiza login do usuário
-    /// </summary>
-    /// <response code="200">Login realizado com sucesso</response>
-    /// <response code="401">Credenciais inválidas</response>
-    /// <response code="429">Muitas tentativas. Aguarde.</response>
     [HttpPost("login")]
     [EnableRateLimiting("AuthPolicy")]
     [ProducesResponseType(typeof(AuthResponseDto), StatusCodes.Status200OK)]
@@ -61,9 +53,6 @@ public class AuthController : ControllerBase
         return Ok(result);
     }
 
-    /// <summary>
-    /// Renova o token de acesso usando refresh token
-    /// </summary>
     [HttpPost("refresh")]
     [ProducesResponseType(typeof(AuthResponseDto), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
@@ -75,19 +64,50 @@ public class AuthController : ControllerBase
         return Ok(result);
     }
 
-    /// <summary>
-    /// Realiza logout do usuário (revoga refresh token)
-    /// </summary>
     [HttpPost("logout")]
     [Authorize]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     public async Task<IActionResult> Logout(CancellationToken cancellationToken)
     {
-        var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-        if (userIdClaim is null) return Unauthorized();
-
-        var userId = int.Parse(userIdClaim);
+        var userId = GetUserId();
         await _authService.LogoutAsync(userId, cancellationToken);
+        return NoContent();
+    }
+
+    [HttpGet("profile")]
+    [Authorize]
+    [ProducesResponseType(typeof(UserDto), StatusCodes.Status200OK)]
+    public async Task<ActionResult<UserDto>> GetProfile(CancellationToken cancellationToken)
+    {
+        var userId = GetUserId();
+        var user = await _authService.GetProfileAsync(userId, cancellationToken);
+        return Ok(user);
+    }
+
+    [HttpPut("profile")]
+    [Authorize]
+    [ProducesResponseType(typeof(UserDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<ActionResult<UserDto>> UpdateProfile(
+        [FromBody] UpdateUserDto dto,
+        CancellationToken cancellationToken)
+    {
+        var userId = GetUserId();
+        var user = await _authService.UpdateProfileAsync(userId, dto, cancellationToken);
+        return Ok(user);
+    }
+
+    [HttpPost("change-password")]
+    [Authorize]
+    [EnableRateLimiting("AuthPolicy")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public async Task<IActionResult> ChangePassword(
+        [FromBody] ChangePasswordDto dto,
+        CancellationToken cancellationToken)
+    {
+        var userId = GetUserId();
+        await _authService.ChangePasswordAsync(userId, dto.CurrentPassword, dto.NewPassword, cancellationToken);
         return NoContent();
     }
 }

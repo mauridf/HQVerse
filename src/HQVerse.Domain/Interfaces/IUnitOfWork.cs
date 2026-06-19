@@ -19,6 +19,10 @@ public interface IUnitOfWork : IDisposable
     IRepository<Comment> Comments { get; }
     IRepository<ExternalMapping> ExternalMappings { get; }
     IRepository<ReadingProgress> ReadingProgresses { get; }
+    IRepository<Universe> Universes { get; }
+    IRepository<UserFavorite> Favorites { get; }
+    IRepository<ReviewLike> ReviewLikes { get; }
+    IRepository<ScanLink> ScanLinks { get; }
     Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
     Task BeginTransactionAsync(CancellationToken cancellationToken = default);
     Task CommitTransactionAsync(CancellationToken cancellationToken = default);

@@ -3,8 +3,13 @@ using HQVerse.Application.DTOs.Auth;
 using HQVerse.Application.DTOs.Characters;
 using HQVerse.Application.DTOs.ComicIssues;
 using HQVerse.Application.DTOs.ComicSeries;
+using HQVerse.Application.DTOs.Creators;
+using HQVerse.Application.DTOs.Favorites;
 using HQVerse.Application.DTOs.Publishers;
 using HQVerse.Application.DTOs.Reviews;
+using HQVerse.Application.DTOs.StoryArcs;
+using HQVerse.Application.DTOs.Teams;
+using HQVerse.Application.DTOs.Universes;
 using HQVerse.Domain.Entities;
 
 namespace HQVerse.Application.Mappings;
@@ -44,6 +49,7 @@ public class MappingProfile : Profile
 
         // User
         CreateMap<User, UserDto>();
+        CreateMap<UpdateUserDto, User>();
 
         // Review
         CreateMap<Review, ReviewDto>()
@@ -53,5 +59,27 @@ public class MappingProfile : Profile
             .ForMember(dest => dest.CommentCount, opt => opt.MapFrom(src => src.Comments.Count));
 
         CreateMap<CreateReviewDto, Review>();
+
+        // Team
+        CreateMap<Team, TeamDto>();
+        CreateMap<CreateTeamDto, Team>();
+        CreateMap<UpdateTeamDto, Team>();
+
+        // Creator
+        CreateMap<Creator, CreatorDto>();
+        CreateMap<CreateCreatorDto, Creator>();
+        CreateMap<UpdateCreatorDto, Creator>();
+        CreateMap<CreatorRole, CreatorRoleDto>();
+
+        // StoryArc
+        CreateMap<StoryArc, StoryArcDto>();
+        CreateMap<StoryArc, StoryArcDetailDto>();
+        CreateMap<CreateStoryArcDto, StoryArc>();
+        CreateMap<UpdateStoryArcDto, StoryArc>();
+
+        // Universe
+        CreateMap<Universe, UniverseDto>();
+        CreateMap<CreateUniverseDto, Universe>();
+        CreateMap<UpdateUniverseDto, Universe>();
     }
 }

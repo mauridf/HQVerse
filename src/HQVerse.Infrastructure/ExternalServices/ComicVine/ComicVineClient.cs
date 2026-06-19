@@ -1,4 +1,5 @@
 ﻿using System.Text.Json;
+using System.Text.Json.Serialization;
 using HQVerse.Application.DTOs.ComicVine;
 using HQVerse.Application.Interfaces;
 using Microsoft.Extensions.Configuration;
@@ -8,13 +9,20 @@ namespace HQVerse.Infrastructure.ExternalServices.ComicVine;
 
 public class ComicVineClient : IComicVineClient
 {
-    private static readonly HttpClient _httpClient = new()
-    {
-        Timeout = TimeSpan.FromSeconds(30)
-    };
-
+    private static readonly HttpClient _httpClient = new() { Timeout = TimeSpan.FromSeconds(30) };
     private readonly string _apiKey;
     private readonly ILogger<ComicVineClient> _logger;
+
+    private static readonly Dictionary<string, string> ResourcePrefixes = new()
+    {
+        { "publisher", "4010" },
+        { "character", "4005" },
+        { "team", "4060" },
+        { "person", "4040" },
+        { "volume", "4050" },
+        { "issue", "4000" },
+        { "story_arc", "4045" }
+    };
 
     static ComicVineClient()
     {
@@ -37,42 +45,56 @@ public class ComicVineClient : IComicVineClient
 
         _logger.LogInformation("ComicVine Search: {Url}", url);
 
-        return await GetAsync<ComicVineListResponse>(url, cancellationToken);
+        var json = await GetJsonAsync(url, cancellationToken);
+        return JsonSerializer.Deserialize<ComicVineListResponse>(json, JsonOptions)!;
     }
 
     public async Task<ComicVineSingleResponse> GetByIdAsync(
-        string resourceType, int comicVineId, CancellationToken cancellationToken = default)
+    string resourceType, int comicVineId, CancellationToken cancellationToken = default)
     {
-        var url = $"https://comicvine.gamespot.com/api/{resourceType}/4000-{comicVineId}/?api_key={_apiKey}&format=json";
+        // Obter o prefixo correto (ex: publisher → 4010)
+        var prefix = ResourcePrefixes.GetValueOrDefault(resourceType.ToLower(), "4000");
+        var url = $"https://comicvine.gamespot.com/api/{resourceType}/{prefix}-{comicVineId}/?api_key={_apiKey}&format=json";
 
         _logger.LogInformation("ComicVine GetById: {Url}", url);
 
-        return await GetAsync<ComicVineSingleResponse>(url, cancellationToken);
+        var json = await GetJsonAsync(url, cancellationToken);
+        return JsonSerializer.Deserialize<ComicVineSingleResponse>(json, JsonOptions)!;
     }
 
-    private async Task<T> GetAsync<T>(string url, CancellationToken cancellationToken)
+    /// <summary>
+    /// Busca detalhes e desserializa no tipo correto
+    /// </summary>
+    public async Task<T?> GetDetailAsync<T>(string resourceType, int comicVineId, CancellationToken cancellationToken = default) where T : class
+    {
+        var response = await GetByIdAsync(resourceType, comicVineId, cancellationToken);
+
+        if (response.Error != "OK" || response.Results.ValueKind != JsonValueKind.Object)
+            return null;
+
+        return JsonSerializer.Deserialize<T>(response.Results.GetRawText(), JsonOptions);
+    }
+
+    private async Task<string> GetJsonAsync(string url, CancellationToken cancellationToken)
     {
         var response = await _httpClient.GetAsync(url, cancellationToken);
+        var content = await response.Content.ReadAsStringAsync(cancellationToken);
+
+        _logger.LogInformation("ComicVine response (first 300 chars): {Json}",
+            content.Length > 300 ? content[..300] : content);
 
         if (!response.IsSuccessStatusCode)
         {
-            var errorBody = await response.Content.ReadAsStringAsync(cancellationToken);
-            _logger.LogError("ComicVine error {StatusCode}: {Error}", response.StatusCode, errorBody);
+            _logger.LogError("ComicVine HTTP {StatusCode}: {Body}", response.StatusCode, content);
             throw new HttpRequestException($"ComicVine API returned {response.StatusCode}");
         }
 
-        var content = await response.Content.ReadAsStringAsync(cancellationToken);
-
-        var options = new JsonSerializerOptions
-        {
-            PropertyNameCaseInsensitive = true
-        };
-
-        var result = JsonSerializer.Deserialize<T>(content, options);
-
-        if (result is null)
-            throw new InvalidOperationException($"Failed to deserialize ComicVine response.");
-
-        return result;
+        return content;
     }
+
+    private static JsonSerializerOptions JsonOptions => new()
+    {
+        PropertyNameCaseInsensitive = true,
+        NumberHandling = JsonNumberHandling.AllowReadingFromString
+    };
 }
