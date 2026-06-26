@@ -14,9 +14,16 @@ public class DashboardStatsDto
 {
     public int TotalIssues { get; set; }
     public int TotalPublishers { get; set; }
+    public int TotalCharacters { get; set; }
+    public int TotalTeams { get; set; }
+    public int TotalCreators { get; set; }
+    public int TotalSeries { get; set; }
+    public int TotalStoryArcs { get; set; }
+    public int TotalUniverses { get; set; }
     public int TotalScans { get; set; }
     public int TotalUsers { get; set; }
     public int TotalReviews { get; set; }
+    public int TotalCollections { get; set; }
 }
 
 public class PublisherStatsDto

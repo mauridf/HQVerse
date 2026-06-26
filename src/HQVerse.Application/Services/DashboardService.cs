@@ -24,9 +24,16 @@ public class DashboardService : IDashboardService
         // Buscar estatísticas
         var totalIssues = await _unitOfWork.ComicIssues.CountAsync(i => true, cancellationToken);
         var totalPublishers = await _unitOfWork.Publishers.CountAsync(p => true, cancellationToken);
+        var totalCharacters = await _unitOfWork.Characters.CountAsync(c => true, cancellationToken);
+        var totalTeams = await _unitOfWork.Teams.CountAsync(t => true, cancellationToken);
+        var totalCreators = await _unitOfWork.Creators.CountAsync(c => true, cancellationToken);
+        var totalSeries = await _unitOfWork.ComicSeries.CountAsync(s => true, cancellationToken);
+        var totalStoryArcs = await _unitOfWork.StoryArcs.CountAsync(s => true, cancellationToken);
+        var totalUniverses = await _unitOfWork.Universes.CountAsync(u => true, cancellationToken);
         var totalScans = await _unitOfWork.Scans.CountAsync(s => true, cancellationToken);
         var totalUsers = await _unitOfWork.Users.CountAsync(u => true, cancellationToken);
         var totalReviews = await _unitOfWork.Reviews.CountAsync(r => true, cancellationToken);
+        var totalCollections = await _unitOfWork.Collections.CountAsync(c => true, cancellationToken);
 
         // Buscar últimos scans (5 mais recentes)
         var allScans = await _unitOfWork.Scans.GetAllAsync(cancellationToken);
@@ -74,16 +81,23 @@ public class DashboardService : IDashboardService
             {
                 TotalIssues = totalIssues,
                 TotalPublishers = totalPublishers,
+                TotalCharacters = totalCharacters,
+                TotalTeams = totalTeams,
+                TotalCreators = totalCreators,
+                TotalSeries = totalSeries,
+                TotalStoryArcs = totalStoryArcs,
+                TotalUniverses = totalUniverses,
                 TotalScans = totalScans,
                 TotalUsers = totalUsers,
-                TotalReviews = totalReviews
+                TotalReviews = totalReviews,
+                TotalCollections = totalCollections
             },
             LatestScans = latestScans,
             TopPublishers = topPublishers
         };
 
-        _logger.LogInformation("Dashboard data generated: {Issues} issues, {Publishers} publishers, {Scans} scans",
-            totalIssues, totalPublishers, totalScans);
+        _logger.LogInformation("Dashboard data generated: {Issues} issues, {Publishers} publishers, {Characters} characters, {Series} series, {Scans} scans, {Users} users",
+            totalIssues, totalPublishers, totalCharacters, totalSeries, totalScans, totalUsers);
 
         return dashboard;
     }
